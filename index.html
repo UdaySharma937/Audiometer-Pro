@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hearing Test Audiometer with Gemini AI</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        @keyframes pulse-wave {
+            0%, 100% { transform: scaleY(0.4); opacity: 0.5; }
+            50% { transform: scaleY(1.2); opacity: 1; }
+        }
+        .wave-bar {
+            animation: pulse-wave 1s infinite ease-in-out;
+        }
+        .wave-bar:nth-child(2) { animation-delay: 0.15s; }
+        .wave-bar:nth-child(3) { animation-delay: 0.3s; }
+        .wave-bar:nth-child(4) { animation-delay: 0.45s; }
+        .wave-bar:nth-child(5) { animation-delay: 0.6s; }
+        .wave-bar:nth-child(6) { animation-delay: 0.75s; }
+        .wave-bar:nth-child(7) { animation-delay: 0.9s; }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans min-h-screen pb-32 transition-colors duration-300">
+
+    <!-- Top Header Navigation Bar -->
+    <header class="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex items-center justify-between shadow-sm transition-all duration-300">
+        <div class="flex items-center space-x-2">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 transform hover:scale-105 transition-transform duration-300">
+                <i class="fa-solid fa-ear-listen text-base"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-sm tracking-tight">Audiometer Pro</h1>
+                <p class="text-[10px] text-slate-500 dark:text-slate-400">Clinical Hearing Test & Diagnostics</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button onclick="toggleDarkMode()" class="w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all shadow-sm transform hover:scale-105">
+                <i id="theme-icon" class="fa-solid fa-moon text-sm"></i>
+            </button>
+            <button onclick="toggleMenu()" class="w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all shadow-sm transform hover:scale-105">
+                <i class="fa-solid fa-bars text-sm"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Side Menu Drawer Overlay -->
+    <div id="side-menu-overlay" onclick="toggleMenu()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 hidden opacity-0 transition-opacity duration-300"></div>
+
+    <!-- Right Side Drawer Menu with Blur & Rounded Corners -->
+    <div id="side-menu" class="fixed top-0 right-0 h-full w-72 bg-white/90 dark:bg-slate-900/95 backdrop-blur-xl border-l border-slate-200 dark:border-slate-800 z-50 shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col p-6 rounded-l-3xl">
+        <div class="flex items-center justify-between pb-6 border-b border-slate-100 dark:border-slate-800">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-sliders text-blue-600"></i>
+                <span class="font-bold text-sm">Menu & Info</span>
+            </div>
+            <button onclick="toggleMenu()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+        </div>
+        <div class="py-6 space-y-4 flex-1 overflow-y-auto text-xs text-slate-600 dark:text-slate-300">
+            <div class="p-3 bg-blue-50 dark:bg-blue-950/50 rounded-2xl border border-blue-100 dark:border-blue-900/50 transform transition-all hover:scale-[1.01]">
+                <p class="font-semibold text-blue-900 dark:text-blue-300 mb-1">🎧 Audiometer Guideline</p>
+                <p class="leading-relaxed">Use headphones in a quiet room. Adjust volume to a comfortable minimum threshold where you can still perceive the pure sine wave.</p>
+            </div>
+            <div class="space-y-2">
+                <p class="font-semibold text-slate-700 dark:text-slate-200">Quick Actions</p>
+                <button onclick="switchTab('home'); toggleMenu();" class="w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center space-x-2 transition-all transform hover:translate-x-1">
+                    <i class="fa-solid fa-house text-blue-600"></i>
+                    <span>Dashboard Home</span>
+                </button>
+                <button onclick="switchTab('test'); toggleMenu();" class="w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center space-x-2 transition-all transform hover:translate-x-1">
+                    <i class="fa-solid fa-ear-listen text-blue-600"></i>
+                    <span>Start Ear Test</span>
+                </button>
+                <button onclick="switchTab('settings'); toggleMenu();" class="w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center space-x-2 transition-all transform hover:translate-x-1">
+                    <i class="fa-solid fa-gear text-blue-600"></i>
+                    <span>Test Settings</span>
+                </button>
+            </div>
+        </div>
+        <div class="pt-4 border-t border-slate-100 dark:border-slate-800 text-[10px] text-center text-slate-400">
+            Audiometer Pro v2.5 • Designed with Precision
+        </div>
+    </div>
+
+    <!-- Main Container Content -->
+    <main class="max-w-md mx-auto p-4 space-y-4">
+
+        <!-- TAB 1: HOME DASHBOARD -->
+        <div id="tab-home" class="space-y-4 animate-fadeIn">
+            <div class="bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-700 rounded-3xl p-6 text-white shadow-xl shadow-blue-500/20 relative overflow-hidden transform transition-all hover:scale-[1.01]">
+                <div class="absolute -right-4 -bottom-4 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+                <h2 class="text-xl font-bold mb-1">Mobile Clinical Audiometer</h2>
+                <p class="text-xs text-blue-100 mb-6 leading-relaxed">Test pure tone air-conduction thresholds from 100 Hz to 10,000 Hz separately for left and right ears with instant professional diagnostic staging.</p>
+                <button onclick="switchTab('test')" class="px-5 py-3 bg-white text-blue-700 rounded-2xl text-xs font-bold shadow-lg hover:bg-blue-50 transition-all transform hover:scale-105 flex items-center space-x-2">
+                    <span>Start New Hearing Test</span>
+                    <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                </button>
+            </div>
+
+            <!-- Features Grid -->
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 shadow-sm space-y-2 transition-all transform hover:-translate-y-1 hover:shadow-md">
+                    <div class="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                        <i class="fa-solid fa-wave-square text-sm"></i>
+                    </div>
+                    <h3 class="font-bold text-xs">100Hz - 10kHz</h3>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400">Full spectrum frequency sweeps for deep diagnostic check.</p>
+                </div>
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 shadow-sm space-y-2 transition-all transform hover:-translate-y-1 hover:shadow-md">
+                    <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                        <i class="fa-solid fa-stethoscope text-sm"></i>
+                    </div>
+                    <h3 class="font-bold text-xs">Expert Audit</h3>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400">Point-wise professional interpretations and recommendations.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: EAR TEST / AUDIOMETER INTERACTIVE VIEW -->
+        <div id="tab-test" class="space-y-4 hidden animate-fadeIn">
+            <!-- Ear Selector Card -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 shadow-sm space-y-3">
+                <label class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center space-x-1.5">
+                    <i class="fa-solid fa-headphones text-blue-600"></i>
+                    <span>1. Select Ear to Test</span>
+                </label>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="setEar('left')" id="btn-left" class="py-3 px-4 rounded-2xl border-2 font-bold text-sm transition-all transform hover:scale-[1.02] flex items-center justify-center space-x-2 border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 shadow-md shadow-blue-500/10">
+                        <i class="fa-solid fa-ear-deaf rotate-90"></i>
+                        <span>Left Ear</span>
+                    </button>
+                    <button onclick="setEar('right')" id="btn-right" class="py-3 px-4 rounded-2xl border-2 font-semibold text-sm transition-all transform hover:scale-[1.02] flex items-center justify-center space-x-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:border-slate-300">
+                        <span>Right Ear</span>
+                        <i class="fa-solid fa-ear-deaf -rotate-90"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Frequency & Volume Controls Card -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 shadow-sm space-y-4">
+                <div class="flex justify-between items-center">
+                    <label class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center space-x-1.5">
+                        <i class="fa-solid fa-sliders text-blue-600"></i>
+                        <span>2. Frequency & Volume</span>
+                    </label>
+                    <span id="freq-display" class="px-2.5 py-1 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-xl text-xs font-bold animate-pulse">1000 Hz</span>
+                </div>
+
+                <!-- Quick Frequency Pills -->
+                <div id="freq-pills" class="grid grid-cols-6 gap-1.5 pt-1">
+                    <!-- Populated dynamically -->
+                </div>
+
+                <!-- Frequency Slider -->
+                <div class="space-y-1">
+                    <div class="flex justify-between text-[11px] text-slate-500">
+                        <span>100 Hz</span>
+                        <span id="current-slider-val" class="font-semibold text-blue-600">1000 Hz</span>
+                        <span>10,000 Hz</span>
+                    </div>
+                    <input type="range" id="freq-slider" min="100" max="10000" step="50" value="1000" oninput="updateFrequencySlider(this.value)" class="w-full accent-blue-600 cursor-pointer transition-all">
+                </div>
+
+                <!-- Volume Slider -->
+                <div class="space-y-1 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="font-medium text-slate-600 dark:text-slate-300">Sound Intensity (Volume)</span>
+                        <span id="vol-display" class="font-bold text-blue-600">30%</span>
+                    </div>
+                    <input type="range" id="volume-slider" min="1" max="100" value="30" oninput="updateVolume(this.value)" class="w-full accent-blue-600 cursor-pointer transition-all">
+                </div>
+
+                <!-- Play Beep Button with Sound Wave Visualizer -->
+                <button onclick="playTone()" class="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-sm shadow-lg shadow-blue-500/25 hover:from-blue-700 hover:to-indigo-700 transition-all transform hover:scale-[1.02] active:scale-95 flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-volume-high text-base"></i>
+                    <span>Play 10s Test Beep</span>
+                </button>
+
+                <div id="sound-visualizer" class="h-10 flex items-center justify-center">
+                    <span class="text-xs text-slate-400 italic">Click play to test tone (lasts 10 seconds).</span>
+                </div>
+            </div>
+
+            <!-- User Response Feedback Buttons -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 shadow-sm space-y-3">
+                <label class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center space-x-1.5">
+                    <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                    <span>3. Can you hear the tone?</span>
+                </label>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="recordFeedback(true)" class="py-3 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition-all transform hover:scale-[1.02] active:scale-95 flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-check"></i>
+                        <span>Yes, I hear it</span>
+                    </button>
+                    <button onclick="recordFeedback(false)" class="py-3 px-4 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md shadow-rose-500/20 transition-all transform hover:scale-[1.02] active:scale-95 flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-xmark"></i>
+                        <span>No / Can't Hear</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Summary Card -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 shadow-sm space-y-3">
+                <div class="flex justify-between items-center">
+                    <label class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center space-x-1.5">
+                        <i class="fa-solid fa-chart-line text-blue-600"></i>
+                        <span>Test Threshold Summary</span>
+                    </label>
+                    <button onclick="resetTest()" class="text-[11px] text-rose-600 hover:underline font-semibold transition-opacity hover:opacity-80">Reset</button>
+                </div>
+                <div id="results-box" class="text-xs text-slate-600 dark:text-slate-400 space-y-2">
+                    <p class="italic text-slate-400">No frequencies recorded yet. Play beeps and record your threshold across frequencies up to 10kHz.</p>
+                </div>
+
+                <!-- Professional Diagnostic Analysis Button -->
+                <div class="pt-2">
+                    <button id="ai-analyze-btn" onclick="analyzeResultsWithGemini()" class="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-500/20 transition-all transform hover:scale-[1.02] active:scale-95 flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-wand-magic-sparkles text-sm"></i>
+                        <span>Get Professional Clinical Report</span>
+                    </button>
+                    <div id="ai-loading" class="hidden text-center py-3 text-xs text-indigo-600 font-semibold flex items-center justify-center space-x-2 animate-pulse">
+                        <i class="fa-solid fa-spinner animate-spin"></i>
+                        <span>Analyzing audiogram thresholds professionally...</span>
+                    </div>
+                </div>
+
+                <!-- Response Container -->
+                <div id="ai-response-box" class="hidden mt-3 p-3.5 bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/50 rounded-2xl text-xs space-y-2 transform transition-all duration-500">
+                    <!-- Response injected here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: SETTINGS -->
+        <div id="tab-settings" class="space-y-4 hidden animate-fadeIn">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 shadow-sm space-y-4">
+                <h3 class="font-bold text-xs text-slate-700 dark:text-slate-300">Audiometer Configuration</h3>
+                <div class="space-y-3 text-xs text-slate-600 dark:text-slate-400">
+                    <div class="flex justify-between items-center py-2 border-b border-slate-100 dark:border-slate-800">
+                        <span>Audio Sample Rate</span>
+                        <span class="font-mono font-semibold text-slate-800 dark:text-slate-200">44.1 kHz</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-slate-100 dark:border-slate-800">
+                        <span>Tone Waveform Type</span>
+                        <span class="font-mono font-semibold text-slate-800 dark:text-slate-200">Sine Wave</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-slate-100 dark:border-slate-800">
+                        <span>Calibration Frequency Range</span>
+                        <span class="font-mono font-semibold text-slate-800 dark:text-slate-200">100 Hz - 10,000 Hz</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2">
+                        <span>Diagnostics Engine</span>
+                        <span class="font-mono font-semibold text-indigo-600">Advanced Audiology Core</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Distinct Floating Bottom Dock Navigation -->
+    <div class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-sm px-2 z-40">
+        <nav class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 rounded-3xl p-2 shadow-2xl shadow-blue-900/10 dark:shadow-slate-950/50 flex items-center justify-around transition-all duration-300">
+            <button onclick="switchTab('home')" id="nav-btn-home" class="flex items-center justify-center space-x-2 px-4 py-2.5 rounded-2xl text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-all duration-300 transform hover:scale-105">
+                <i class="fa-solid fa-house text-sm"></i>
+                <span class="text-xs font-semibold">Home</span>
+            </button>
+            <button onclick="switchTab('test')" id="nav-btn-test" class="flex items-center justify-center space-x-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25 transition-all duration-300 transform hover:scale-105">
+                <i class="fa-solid fa-ear-listen text-sm"></i>
+                <span class="text-xs font-semibold">Ear Test</span>
+            </button>
+            <button onclick="switchTab('settings')" id="nav-btn-settings" class="flex items-center justify-center space-x-2 px-4 py-2.5 rounded-2xl text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-all duration-300 transform hover:scale-105">
+                <i class="fa-solid fa-gear text-sm"></i>
+                <span class="text-xs font-semibold">Settings</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Modal Notification Banner -->
+    <div id="modal-banner" class="fixed bottom-28 left-1/2 -translate-x-1/2 bg-slate-900/90 dark:bg-slate-100 text-white dark:text-slate-900 px-4 py-2.5 rounded-2xl shadow-2xl text-xs font-medium hidden transition-all duration-300 z-50 backdrop-blur-md transform animate-bounce">
+        Notification message
+    </div>
+
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn {
+            animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+    </style>
+
+    <script>
+        // Global State Variables
+        let currentFreq = 1000;
+        let currentEar = 'left';
+        let testResults = { left: {}, right: {} };
+        let audioCtx = null;
+
+        const frequencies = [100, 250, 500, 1000, 2000, 4000, 6000, 8000, 10000];
+
+        // Navigation tab handler with smooth transitions
+        function switchTab(tabId) {
+            ['home', 'test', 'settings'].forEach(t => {
+                const tabEl = document.getElementById(`tab-${t}`);
+                if (tabEl) {
+                    tabEl.classList.add('hidden');
+                    tabEl.classList.remove('animate-fadeIn');
+                }
+                const navBtn = document.getElementById(`nav-btn-${t}`);
+                if (navBtn) {
+                    navBtn.className = "flex items-center justify-center space-x-2 px-4 py-2.5 rounded-2xl text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-all duration-300 transform hover:scale-105";
+                }
+            });
+            const targetTab = document.getElementById(`tab-${tabId}`);
+            if (targetTab) {
+                targetTab.classList.remove('hidden');
+                targetTab.classList.add('animate-fadeIn');
+            }
+            const activeNav = document.getElementById(`nav-btn-${tabId}`);
+            if (activeNav) {
+                activeNav.className = "flex items-center justify-center space-x-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25 transition-all duration-300 transform scale-105";
+            }
+        }
+
+        // Toggle Right Side Menu
+        function toggleMenu() {
+            const menu = document.getElementById('side-menu');
+            const overlay = document.getElementById('side-menu-overlay');
+            if (!menu || !overlay) return;
+            if (menu.classList.contains('translate-x-full')) {
+                menu.classList.remove('translate-x-full');
+                overlay.classList.remove('hidden');
+                setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+            } else {
+                menu.classList.add('translate-x-full');
+                overlay.classList.add('opacity-0');
+                setTimeout(() => overlay.classList.add('hidden'), 300);
+            }
+        }
+
+        // Toggle Dark Mode
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                if (icon) icon.className = "fa-solid fa-moon text-sm";
+                showToast("Switched to Light Mode");
+            } else {
+                html.classList.add('dark');
+                if (icon) icon.className = "fa-solid fa-sun text-sm";
+                showToast("Switched to Dark Mode");
+            }
+        }
+
+        // Initialize UI frequency pills (100 Hz to 10 kHz)
+        function initFreqPills() {
+            const container = document.getElementById('freq-pills');
+            if (!container) return;
+            container.innerHTML = '';
+            const presetFreqs = [250, 1000, 3000, 6000, 8000, 10000];
+            presetFreqs.forEach((freq) => {
+                const btn = document.createElement('button');
+                btn.innerText = freq >= 1000 ? (freq/1000) + 'k' : freq;
+                btn.className = `py-1.5 rounded-xl text-xs font-bold transition-all transform hover:scale-105 active:scale-95 shadow-sm ${currentFreq === freq ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30 scale-105' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}`;
+                btn.onclick = () => setFrequency(freq);
+                container.appendChild(btn);
+            });
+        }
+
+        function setFrequency(freq) {
+            currentFreq = parseInt(freq);
+            const freqDisp = document.getElementById('freq-display');
+            if (freqDisp) freqDisp.innerText = currentFreq + ' Hz';
+            const freqSlider = document.getElementById('freq-slider');
+            if (freqSlider) freqSlider.value = currentFreq;
+            const sliderVal = document.getElementById('current-slider-val');
+            if (sliderVal) sliderVal.innerText = currentFreq + ' Hz';
+            initFreqPills();
+        }
+
+        function updateFrequencySlider(val) {
+            currentFreq = parseInt(val);
+            const freqDisp = document.getElementById('freq-display');
+            if (freqDisp) freqDisp.innerText = currentFreq + ' Hz';
+            const sliderVal = document.getElementById('current-slider-val');
+            if (sliderVal) sliderVal.innerText = currentFreq + ' Hz';
+            initFreqPills();
+        }
+
+        function setEar(ear) {
+            currentEar = ear;
+            const btnLeft = document.getElementById('btn-left');
+            const btnRight = document.getElementById('btn-right');
+
+            if (btnLeft && btnRight) {
+                if (ear === 'left') {
+                    btnLeft.className = "py-3 px-4 rounded-2xl border-2 font-bold text-sm transition-all flex items-center justify-center space-x-2 border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 shadow-md shadow-blue-500/10";
+                    btnRight.className = "py-3 px-4 rounded-2xl border-2 font-semibold text-sm transition-all flex items-center justify-center space-x-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:border-slate-300";
+                } else {
+                    btnRight.className = "py-3 px-4 rounded-2xl border-2 font-bold text-sm transition-all flex items-center justify-center space-x-2 border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 shadow-md shadow-blue-500/10";
+                    btnLeft.className = "py-3 px-4 rounded-2xl border-2 font-semibold text-sm transition-all flex items-center justify-center space-x-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:border-slate-300";
+                }
+            }
+            showToast(`Switched to ${ear.toUpperCase()} ear`);
+        }
+
+        function updateVolume(val) {
+            const volDisp = document.getElementById('vol-display');
+            if (volDisp) volDisp.innerText = val + '%';
+        }
+
+        function triggerVisualizerAnimation(active) {
+            const viz = document.getElementById('sound-visualizer');
+            if (!viz) return;
+            if (active) {
+                viz.innerHTML = `
+                    <div class="flex items-center space-x-1 h-8">
+                        <div class="w-1.5 bg-blue-500 rounded-full wave-bar"></div>
+                        <div class="w-1.5 bg-indigo-500 rounded-full wave-bar"></div>
+                        <div class="w-1.5 bg-blue-600 rounded-full wave-bar"></div>
+                        <div class="w-1.5 bg-indigo-600 rounded-full wave-bar"></div>
+                        <div class="w-1.5 bg-blue-500 rounded-full wave-bar"></div>
+                        <div class="w-1.5 bg-teal-500 rounded-full wave-bar"></div>
+                        <div class="w-1.5 bg-indigo-500 rounded-full wave-bar"></div>
+                    </div>
+                `;
+            } else {
+                viz.innerHTML = `<span class="text-xs text-slate-400 italic">Tone completed. Record your feedback below.</span>`;
+            }
+        }
+
+        // Web Audio API Sine Wave Generator with Stereo Panning & 10-Second Playback Duration
+        function playTone() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const freq = currentFreq;
+            const volumeSlider = document.getElementById('volume-slider');
+            const volumeVal = volumeSlider ? parseInt(volumeSlider.value) / 100 : 0.3;
+
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            const panner = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : null;
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+            // Play sound for 10 seconds with smooth fade in/out
+            const duration = 10.0;
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(volumeVal * 0.3, audioCtx.currentTime + 0.1);
+            gainNode.gain.setValueAtTime(volumeVal * 0.3, audioCtx.currentTime + duration - 0.5);
+            gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + duration);
+
+            osc.connect(gainNode);
+
+            if (panner) {
+                panner.pan.setValueAtTime(currentEar === 'left' ? -1 : 1, audioCtx.currentTime);
+                gainNode.connect(panner);
+                panner.connect(audioCtx.destination);
+            } else {
+                gainNode.connect(audioCtx.destination);
+            }
+
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+
+            triggerVisualizerAnimation(true);
+            setTimeout(() => {
+                triggerVisualizerAnimation(false);
+            }, duration * 1000);
+
+            showToast(`Playing ${freq} Hz for 10 seconds in ${currentEar.toUpperCase()} ear`);
+        }
+
+        function recordFeedback(heard) {
+            const freq = currentFreq;
+            const volumeSlider = document.getElementById('volume-slider');
+            const vol = volumeSlider ? parseInt(volumeSlider.value) : 30;
+
+            if (heard) {
+                testResults[currentEar][freq] = vol;
+                showToast(`Recorded threshold: ${freq}Hz at ${vol}% (${currentEar})`);
+            } else {
+                if (vol >= 80) {
+                    testResults[currentEar][freq] = 100;
+                    showToast(`Marked ${freq}Hz as Not Heard`);
+                } else {
+                    showToast(`Tone not heard at ${vol}%. Increase volume and retry.`);
+                }
+            }
+            updateResultsUI();
+        }
+
+        function calculateHearingStage(earData) {
+            const recordedFreqs = Object.keys(earData);
+            if (recordedFreqs.length === 0) return { stage: "Not Tested", color: "text-slate-400", bg: "bg-slate-100 dark:bg-slate-800", desc: "No data available." };
+
+            let totalVol = 0;
+            recordedFreqs.forEach(f => { totalVol += earData[f]; });
+            const avgVol = totalVol / recordedFreqs.length;
+            const maxVolRecorded = Math.max(...Object.values(earData));
+
+            if (avgVol <= 25 && maxVolRecorded <= 35) {
+                return { stage: "Normal Hearing", color: "text-emerald-700 dark:text-emerald-300", bg: "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200", desc: "Thresholds are within normal limits across tested range." };
+            } else if (avgVol <= 45 || maxVolRecorded <= 55) {
+                return { stage: "Mild Loss", color: "text-amber-700 dark:text-amber-300", bg: "bg-amber-50 dark:bg-amber-950/40 border-amber-200", desc: "Difficulty hearing soft high frequencies or speech in noise." };
+            } else if (avgVol <= 70 || maxVolRecorded <= 80) {
+                return { stage: "Moderate Loss", color: "text-orange-700 dark:text-orange-300", bg: "bg-orange-50 dark:bg-orange-950/40 border-orange-200", desc: "Difficulty hearing normal conversational speech." };
+            } else {
+                return { stage: "Severe / Profound Loss", color: "text-rose-700 dark:text-rose-300", bg: "bg-rose-50 dark:bg-rose-950/40 border-rose-200", desc: "Significant impairment. Consult specialist." };
+            }
+        }
+
+        function updateResultsUI() {
+            const box = document.getElementById('results-box');
+            if (!box) return;
+            let html = '';
+            let hasData = false;
+
+            ['left', 'right'].forEach(ear => {
+                const data = testResults[ear];
+                if (Object.keys(data).length > 0) {
+                    hasData = true;
+                    const staging = calculateHearingStage(data);
+                    html += `
+                        <div class="border border-slate-200 dark:border-slate-800 rounded-2xl p-3 space-y-1.5 bg-white dark:bg-slate-900 shadow-sm">
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold text-slate-700 dark:text-slate-200 capitalize">👂 ${ear} Ear Summary</span>
+                                <span class="text-xs px-2 py-0.5 rounded-md font-semibold ${staging.bg} ${staging.color}">${staging.stage}</span>
+                            </div>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400">${staging.desc}</p>
+                            <div class="pt-1 text-[11px] font-mono text-slate-600 dark:text-slate-300 grid grid-cols-3 gap-1 border-t border-slate-100 dark:border-slate-800">
+                    `;
+                    for (let [f, v] of Object.entries(data)) {
+                        html += `<div>• ${f}Hz: <span class="text-blue-600 dark:text-blue-400 font-semibold">${v}%</span></div>`;
+                    }
+                    html += `</div></div>`;
+                }
+            });
+
+            if (!hasData) {
+                html = `<p class="text-slate-400 italic">No frequencies recorded yet. Play beeps and record your threshold across frequencies up to 10kHz.</p>`;
+            }
+            box.innerHTML = html;
+        }
+
+        function resetTest() {
+            testResults = { left: {}, right: {} };
+            updateResultsUI();
+            const responseBox = document.getElementById('ai-response-box');
+            if (responseBox) responseBox.classList.add('hidden');
+            showToast("Test results reset.");
+        }
+
+        async function analyzeResultsWithGemini() {
+            const hasLeft = Object.keys(testResults.left).length > 0;
+            const hasRight = Object.keys(testResults.right).length > 0;
+
+            if (!hasLeft && !hasRight) {
+                showToast("Please complete at least a few frequencies first.");
+                return;
+            }
+
+            const btn = document.getElementById('ai-analyze-btn');
+            const loading = document.getElementById('ai-loading');
+            const responseBox = document.getElementById('ai-response-box');
+
+            if (btn) btn.classList.add('hidden');
+            if (loading) loading.classList.remove('hidden');
+            if (responseBox) responseBox.classList.add('hidden');
+
+            const promptData = JSON.stringify(testResults, null, 2);
+            const systemPrompt = "You are an expert audiologist and medical specialist. Provide a crisp, point-wise clinical interpretation of the user's audiometer test thresholds spanning 100Hz to 10,000Hz. Format output strictly with clear Headings and bullet points: 1) Clinical Staging, 2) High-Frequency Analysis, 3) Professional Recommendations.";
+            const userQuery = `Audiogram test thresholds across 100Hz-10kHz: ${promptData}. Provide crisp point-wise analysis.`;
+
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] }
+            };
+
+            let success = false;
+            let attempts = 0;
+            let resultText = "";
+
+            while (!success && attempts < 4) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const data = await response.json();
+                    const candidate = data.candidates?.[0];
+                    if (candidate && candidate.content?.parts?.[0]?.text) {
+                        resultText = candidate.content.parts[0].text;
+                        success = true;
+                    } else {
+                        throw new Error("Invalid response");
+                    }
+                } catch (e) {
+                    attempts++;
+                    if (attempts >= 4) {
+                        resultText = "Unable to generate diagnostic report. Please check your connection.";
+                    } else {
+                        await new Promise(res => setTimeout(res, Math.pow(2, attempts) * 500));
+                    }
+                }
+            }
+
+            if (loading) loading.classList.add('hidden');
+            if (btn) btn.classList.remove('hidden');
+            if (responseBox) {
+                responseBox.classList.remove('hidden');
+                responseBox.innerHTML = `
+                    <div class="font-bold text-indigo-900 dark:text-indigo-300 flex items-center space-x-1 mb-1">
+                        <i class="fa-solid fa-stethoscope"></i>
+                        <span>Professional Clinical Assessment (100Hz - 10kHz)</span>
+                    </div>
+                    <div class="whitespace-pre-line text-slate-700 dark:text-slate-300 leading-relaxed text-[11px]">${resultText}</div>
+                `;
+            }
+            showToast("Clinical report generated successfully!");
+        }
+
+        function showToast(msg) {
+            const banner = document.getElementById('modal-banner');
+            if (!banner) return;
+            banner.innerText = msg;
+            banner.classList.remove('hidden');
+            setTimeout(() => {
+                banner.classList.add('hidden');
+            }, 3000);
+        }
+
+        window.onload = () => {
+            setTimeout(initFreqPills, 50);
+        };
+    </script>
+</body>
+</html>
